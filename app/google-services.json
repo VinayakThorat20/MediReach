@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "304214652061",
+    "project_id": "medireach-9dd5a",
+    "storage_bucket": "medireach-9dd5a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:304214652061:android:b7802ba74f85b68f405074",
+        "android_client_info": {
+          "package_name": "com.vinayak.medireach"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqNksbBUgv32E_i6LxtiUs50oM6BudYhs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
