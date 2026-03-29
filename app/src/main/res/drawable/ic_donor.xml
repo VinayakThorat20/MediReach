@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Blood Drop Main Shape -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2C12,2 8,8 8,12C8,15.3 9.8,18 12,18C14.2,18 16,15.3 16,12C16,8 12,2 12,2Z" />
+    <!-- Heart inside drop -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M12,10C11.7,9.7 11.3,9.5 10.9,9.5C10,9.5 9.3,10.2 9.3,11.1C9.3,12 10,12.7 10.9,12.7C11.3,12.7 11.7,12.5 12,12.2C12.3,12.5 12.7,12.7 13.1,12.7C14,12.7 14.7,12 14.7,11.1C14.7,10.2 14,9.5 13.1,9.5C12.7,9.5 12.3,9.7 12,10Z" />
+</vector>
+

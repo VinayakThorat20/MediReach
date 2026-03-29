@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -11,15 +20,56 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MediReach">
+
+        <!-- Language Selection - LAUNCHER Activity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".LanguageSelectionActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Main Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" />
+
+        <!-- Splash Screen -->
+        <activity android:name=".SplashActivity" />
+
+        <!-- Onboarding -->
+        <activity android:name=".OnboardingActivity" />
+
+        <!-- Authentication -->
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".RegisterActivity" />
+
+        <!-- Role Selection -->
+        <activity android:name=".RoleSelectionActivity" />
+
+        <!-- Patient Dashboard -->
+        <activity android:name=".PatientDashboardActivity" />
+
+        <!-- Hospital Admin Dashboard -->
+        <activity android:name=".HospitalAdminDashboardActivity" />
+
+        <!-- Donor Dashboard -->
+        <activity android:name=".DonorDashboardActivity" />
+
+        <!-- Hospital Details -->
+        <activity android:name=".HospitalDetailActivity" />
+
+        <!-- Hospital Setup -->
+        <activity android:name=".HospitalSetupActivity" />
+
+        <!-- Profile -->
+        <activity android:name=".ProfileActivity" />
+
+        <!-- Edit Profile -->
+        <activity android:name=".EditProfileActivity" />
+
     </application>
 
 </manifest>

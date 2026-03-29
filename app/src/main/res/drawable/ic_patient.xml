@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Head -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2Z" />
+    <!-- Body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,7C12.55,7 13,7.45 13,8L13,13C13,13.55 12.55,14 12,14C11.45,14 11,13.55 11,13L11,8C11,7.45 11.45,7 12,7Z" />
+    <!-- Left Arm -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M8,9C8.55,9 9,9.45 9,10L9,13C9,13.55 8.55,14 8,14C7.45,14 7,13.55 7,13L7,10C7,9.45 7.45,9 8,9Z" />
+    <!-- Right Arm -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16,9C16.55,9 17,9.45 17,10L17,13C17,13.55 16.55,14 16,14C15.45,14 15,13.55 15,13L15,10C15,9.45 15.45,9 16,9Z" />
+    <!-- Left Leg -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,14C10.55,14 11,14.45 11,15L11,20C11,20.55 10.55,21 10,21C9.45,21 9,20.55 9,20L9,15C9,14.45 9.45,14 10,14Z" />
+    <!-- Right Leg -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,14C14.55,14 15,14.45 15,15L15,20C15,20.55 14.55,21 14,21C13.45,21 13,20.55 13,20L13,15C13,14.45 13.45,14 14,14Z" />
+</vector>
+
