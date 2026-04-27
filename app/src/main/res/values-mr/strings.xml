@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">मेडीरीच</string>
+    <string name="select_language">भाषा निवडा</string>
+    <string name="choose_preferred_language">तुमची पसंतीची भाषा निवडा</string>
+    <string name="login">लॉगिन करा</string>
+    <string name="register">नोंदणी करा</string>
+    <string name="logout">लॉगआउट</string>
+    <string name="find_donors">रक्तदाता शोधा</string>
+    <string name="find_hospitals">रुग्णालय शोधा</string>
+    <string name="search">शोधा</string>
+    <string name="available">उपलब्ध</string>
+    <string name="blood_group">रक्तगट</string>
+    <string name="city">शहर</string>
+    <string name="call_donor">📞 दात्याला कॉल करा</string>
+    <string name="no_donors_found">निवडलेल्या निकषांसाठी कोणताही दाता सापडला नाही</string>
+    <string name="no_hospitals_found">जवळपास कोणतेही रुग्णालय सापडले नाही</string>
+    <string name="edit_profile">प्रोफाइल संपादित करा</string>
+    <string name="delete_account">खाते हटवा</string>
+</resources>
+
