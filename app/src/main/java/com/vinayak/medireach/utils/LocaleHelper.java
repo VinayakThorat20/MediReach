@@ -3,6 +3,7 @@ package com.vinayak.medireach.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.Build;
 
 import java.util.Locale;
@@ -30,6 +31,40 @@ public class LocaleHelper {
 
         // Update app locale
         updateLocale(context, languageCode);
+    }
+
+    /**
+     * Sets the locale and returns an updated context.
+     *
+     * @param context The application context
+     * @param language The language code
+     * @return Updated context with new locale
+     */
+    public static Context setLocale(Context context, String language) {
+        saveLanguage(context, language);
+        return updateResources(context, language);
+    }
+
+    /**
+     * Called from attachBaseContext to apply the saved language.
+     *
+     * @param context The application context
+     * @return Updated context with saved language
+     */
+    public static Context onAttach(Context context) {
+        String language = getSavedLanguage(context);
+        return updateResources(context, language);
+    }
+
+    /**
+     * Retrieves the saved language from SharedPreferences.
+     *
+     * @param context The application context
+     * @return The saved language code
+     */
+    public static String getSavedLanguage(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
+        return preferences.getString(LANGUAGE_KEY, DEFAULT_LANGUAGE);
     }
 
     /**
@@ -79,6 +114,28 @@ public class LocaleHelper {
         }
 
         context.getResources().updateConfiguration(configuration, context.getResources().getDisplayMetrics());
+    }
+
+    /**
+     * Updates resources with the new locale.
+     *
+     * @param context The application context
+     * @param language The language code
+     * @return Updated context
+     */
+    private static Context updateResources(Context context, String language) {
+        Locale locale = new Locale(language);
+        Locale.setDefault(locale);
+        Resources resources = context.getResources();
+        Configuration config = new Configuration(resources.getConfiguration());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            config.setLocale(locale);
+            return context.createConfigurationContext(config);
+        } else {
+            config.locale = locale;
+            resources.updateConfiguration(config, resources.getDisplayMetrics());
+            return context;
+        }
     }
 
     /**

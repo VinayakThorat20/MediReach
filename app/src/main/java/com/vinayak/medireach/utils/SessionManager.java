@@ -15,7 +15,7 @@ import com.vinayak.medireach.RoleSelectionActivity;
 
 public final class SessionManager {
 
-    public static final String PREFS_NAME = "medireach_preferences";
+    public static final String PREFS_NAME = "MediReachPrefs";
     public static final String KEY_USER_ROLE = "user_role";
     public static final String KEY_HOSPITAL_SETUP_DONE = "hospital_setup_done";
     public static final String KEY_HOSPITAL_NAME = "hospital_name";

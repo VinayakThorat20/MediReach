@@ -240,7 +240,10 @@ public class RegisterActivity extends AppCompatActivity {
                 .set(userMap, SetOptions.merge())
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "User document saved to Firestore for: " + email);
-                    SessionManager.saveRole(this, selectedRole);
+                    getSharedPreferences("MediReachPrefs", MODE_PRIVATE)
+                            .edit()
+                            .putString("user_role", selectedRole)
+                            .apply();
                     navigateByRole(selectedRole);
                 })
                 .addOnFailureListener(exception -> {
@@ -292,11 +295,14 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private void navigateByRole(String role) {
         Intent intent;
-        String normalizedRole = SessionManager.normalizeRole(role);
-        if (TextUtils.isEmpty(normalizedRole)) {
-            intent = new Intent(this, RoleSelectionActivity.class);
+        if ("hospital_admin".equals(role)) {
+            intent = new Intent(this, HospitalSetupActivity.class);
+        } else if ("patient".equals(role)) {
+            intent = new Intent(this, PatientDashboardActivity.class);
+        } else if ("donor".equals(role)) {
+            intent = new Intent(this, DonorDashboardActivity.class);
         } else {
-            intent = SessionManager.intentForRole(this, normalizedRole);
+            intent = new Intent(this, RoleSelectionActivity.class);
         }
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);

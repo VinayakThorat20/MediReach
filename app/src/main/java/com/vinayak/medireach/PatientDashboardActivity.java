@@ -74,6 +74,7 @@ public class PatientDashboardActivity extends AppCompatActivity {
     private ProgressBar progressData;
     private SwipeRefreshLayout swipeRefreshLayout;
     private View buttonManualLocation;
+    private View buttonFindDonors;
     private View buttonEmergencyFab;
     private View buttonDebugShowAllHospitals;
     private ImageView imageViewLogout;
@@ -154,6 +155,7 @@ public class PatientDashboardActivity extends AppCompatActivity {
         progressData = findViewById(R.id.progressData);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         buttonManualLocation = findViewById(R.id.buttonManualLocation);
+        buttonFindDonors = findViewById(R.id.buttonFindDonors);
         buttonEmergencyFab = findViewById(R.id.fabEmergency);
         buttonDebugShowAllHospitals = findViewById(R.id.buttonDebugShowAllHospitals);
         imageViewLogout = findViewById(R.id.imageViewLogout);
@@ -193,6 +195,7 @@ public class PatientDashboardActivity extends AppCompatActivity {
         });
 
         buttonManualLocation.setOnClickListener(v -> showManualLocationDialog());
+        buttonFindDonors.setOnClickListener(v -> startActivity(new Intent(this, DonorSearchActivity.class)));
         buttonEmergencyFab.setOnClickListener(v -> showEmergencyActions());
         buttonDebugShowAllHospitals.setOnClickListener(v -> fetchAllHospitalsWithoutFilter());
 
@@ -724,7 +727,8 @@ public class PatientDashboardActivity extends AppCompatActivity {
         String[] options = {
                 "Call 108 - Ambulance",
                 "Call 102 - Medical Helpline",
-                "Call nearest hospital"
+                "Call nearest hospital",
+                "Find Blood Donors"
         };
         new AlertDialog.Builder(this)
                 .setTitle("Emergency Quick Call")
@@ -733,8 +737,10 @@ public class PatientDashboardActivity extends AppCompatActivity {
                         openDialer("108");
                     } else if (which == 1) {
                         openDialer("102");
-                    } else {
+                    } else if (which == 2) {
                         callNearestHospital();
+                    } else {
+                        startActivity(new Intent(this, DonorSearchActivity.class));
                     }
                 })
                 .show();

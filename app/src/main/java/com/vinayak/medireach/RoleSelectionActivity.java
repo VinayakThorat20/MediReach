@@ -104,16 +104,9 @@ public class RoleSelectionActivity extends AppCompatActivity {
      */
     private void selectRole(String role) {
         Log.d(TAG, "Role selected: " + role);
-
-        // Save role to Firestore
         saveRoleToFirestore(role);
     }
 
-    /**
-     * Saves the selected role to Firestore in the users collection.
-     *
-     * @param role The selected role
-     */
     private void saveRoleToFirestore(String role) {
         String userId = currentUser.getUid();
 
@@ -124,8 +117,11 @@ public class RoleSelectionActivity extends AppCompatActivity {
                 .set(updateMap, com.google.firebase.firestore.SetOptions.merge())
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Role saved to Firestore: " + role);
-                    SessionManager.saveRole(this, role);
-                    navigateToDashboard(role);
+                    getSharedPreferences("MediReachPrefs", MODE_PRIVATE)
+                            .edit()
+                            .putString("user_role", role)
+                            .apply();
+                    navigateByRole(role);
                 })
                 .addOnFailureListener(exception -> {
                     Log.e(TAG, "Failed to save role: " + exception.getMessage());
@@ -135,20 +131,23 @@ public class RoleSelectionActivity extends AppCompatActivity {
                 });
     }
 
-    /**
-     * Navigates to the appropriate dashboard based on the selected role.
-     *
-     * @param role The selected role
-     */
-    private void navigateToDashboard(String role) {
-        String normalizedRole = SessionManager.normalizeRole(role);
-        if (normalizedRole.isEmpty()) {
-            Log.e(TAG, "Unknown role: " + role);
-            Toast.makeText(this, "Unknown role. Please try again.", Toast.LENGTH_SHORT).show();
-            return;
+    private void navigateByRole(String role) {
+        Intent intent;
+        if ("hospital_admin".equals(role)) {
+            boolean setupDone = getSharedPreferences("MediReachPrefs", MODE_PRIVATE)
+                    .getBoolean("hospital_setup_done", false);
+            if (setupDone) {
+                intent = new Intent(this, HospitalAdminDashboardActivity.class);
+            } else {
+                intent = new Intent(this, HospitalSetupActivity.class);
+            }
+        } else if ("patient".equals(role)) {
+            intent = new Intent(this, PatientDashboardActivity.class);
+        } else if ("donor".equals(role)) {
+            intent = new Intent(this, DonorDashboardActivity.class);
+        } else {
+            intent = new Intent(this, RoleSelectionActivity.class);
         }
-        Intent intent = SessionManager.intentForRole(this, normalizedRole);
-
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

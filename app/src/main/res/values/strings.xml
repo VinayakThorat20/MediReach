@@ -74,4 +74,17 @@
     <string name="get_directions">Get Directions</string>
     <string name="last_updated">Last Updated: %1$s</string>
     <string name="not_available">N/A</string>
+    <string name="available">Available</string>
+    <string name="blood_group">Blood Group</string>
+    <string name="call_donor">Call Donor</string>
+    <string name="city">City</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="find_donors">Find Donors</string>
+    <string name="find_hospitals">Find Hospitals</string>
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
+    <string name="no_donors_found">No donors found</string>
+    <string name="register">Register</string>
+    <string name="search">Search</string>
 </resources>

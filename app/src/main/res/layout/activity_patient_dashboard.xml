@@ -102,6 +102,18 @@
                 android:visibility="gone" />
 
             <TextView
+                android:id="@+id/buttonFindDonors"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/button_background"
+                android:gravity="center"
+                android:padding="12dp"
+                android:text="Find Blood Donors"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
+
+            <TextView
                 android:id="@+id/buttonManualLocation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

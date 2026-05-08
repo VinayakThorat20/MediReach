@@ -209,49 +209,40 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        String cachedRole = SessionManager.getSavedRole(this);
-        if (!TextUtils.isEmpty(cachedRole)) {
-            navigateByRole(cachedRole);
-            return;
-        }
-
         firebaseFirestore.collection("users")
                 .document(user.getUid())
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    String role = SessionManager.normalizeRole(snapshot.getString("role"));
-                    SessionManager.saveRole(this, role);
+                    String role = snapshot.getString("role");
+                    if (role == null) role = "";
+                    getSharedPreferences("MediReachPrefs", MODE_PRIVATE)
+                            .edit()
+                            .putString("user_role", role)
+                            .apply();
                     navigateByRole(role);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to fetch role from Firestore", e);
+                    Log.e(TAG, "Failed to fetch role", e);
                     navigateByRole("");
                 });
     }
 
     private void navigateByRole(String role) {
-        role = SessionManager.normalizeRole(role);
-        SharedPreferences prefs = getSharedPreferences(SessionManager.PREFS_NAME, MODE_PRIVATE);
-        prefs.edit().putString(SessionManager.KEY_USER_ROLE, role).apply();
-
         Intent intent;
-        switch (role) {
-            case SessionManager.ROLE_HOSPITAL_ADMIN:
-                if (SessionManager.isHospitalSetupDone(this)) {
-                    intent = new Intent(this, HospitalAdminDashboardActivity.class);
-                } else {
-                    intent = new Intent(this, HospitalSetupActivity.class);
-                }
-                break;
-            case SessionManager.ROLE_DONOR:
-                intent = new Intent(this, DonorDashboardActivity.class);
-                break;
-            case SessionManager.ROLE_PATIENT:
-                intent = new Intent(this, PatientDashboardActivity.class);
-                break;
-            default:
-                intent = new Intent(this, RoleSelectionActivity.class);
-                break;
+        if ("hospital_admin".equals(role)) {
+            boolean setupDone = getSharedPreferences("MediReachPrefs", MODE_PRIVATE)
+                    .getBoolean("hospital_setup_done", false);
+            if (setupDone) {
+                intent = new Intent(this, HospitalAdminDashboardActivity.class);
+            } else {
+                intent = new Intent(this, HospitalSetupActivity.class);
+            }
+        } else if ("patient".equals(role)) {
+            intent = new Intent(this, PatientDashboardActivity.class);
+        } else if ("donor".equals(role)) {
+            intent = new Intent(this, DonorDashboardActivity.class);
+        } else {
+            intent = new Intent(this, RoleSelectionActivity.class);
         }
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);

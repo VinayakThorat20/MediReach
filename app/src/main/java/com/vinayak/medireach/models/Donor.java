@@ -60,8 +60,8 @@ public class Donor {
     public String getLastDonationDate() { return lastDonationDate; }
     public void setLastDonationDate(String lastDonationDate) { this.lastDonationDate = lastDonationDate; }
 
-    public boolean isAvailable() { return isAvailable; }
-    public void setAvailable(boolean available) { isAvailable = available; }
+    public boolean getIsAvailable() { return isAvailable; }
+    public void setIsAvailable(boolean isAvailable) { this.isAvailable = isAvailable; }
 
     public boolean isOrganDonor() { return organDonor; }
     public void setOrganDonor(boolean organDonor) { this.organDonor = organDonor; }

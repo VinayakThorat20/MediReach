@@ -1,52 +1,42 @@
 package com.vinayak.medireach;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.ListenerRegistration;
 import com.vinayak.medireach.adapters.DonorAdapter;
 import com.vinayak.medireach.models.Donor;
-import com.vinayak.medireach.utils.LocaleHelper;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class DonorSearchActivity extends AppCompatActivity {
 
-    private Spinner spinnerBloodGroup;
-    private Spinner spinnerCity;
-    private Button buttonSearch;
-    private RecyclerView recyclerView;
-    private TextView emptyStateView;
-
-    private final List<Donor> donorList = new ArrayList<>();
-    private final List<Donor> filteredDonorList = new ArrayList<>();
-    private DonorAdapter donorAdapter;
+    private RecyclerView recyclerViewDonors;
+    private DonorAdapter adapter;
+    private List<Donor> allDonors = new ArrayList<>();
+    private List<Donor> filteredDonors = new ArrayList<>();
+    
+    private Spinner spinnerBloodGroup, spinnerCity;
+    private ProgressBar progressBar;
+    private TextView textViewNoDonors;
+    
     private FirebaseFirestore db;
-    private ListenerRegistration donorListener;
-
-    private String selectedBloodGroup = "All";
-    private String selectedCity = "All";
-
-    @Override
-    protected void attachBaseContext(Context newBase) {
-        super.attachBaseContext(LocaleHelper.onAttach(newBase));
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,126 +44,117 @@ public class DonorSearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_donor_search);
 
         db = FirebaseFirestore.getInstance();
+
         initViews();
         setupSpinners();
-        setupRecyclerView();
-        bindActions();
-        listenForDonors();
+        fetchDonors();
     }
 
     private void initViews() {
-        spinnerBloodGroup = findViewById(R.id.spinnerBloodGroupFilter);
-        spinnerCity = findViewById(R.id.spinnerCityFilter);
-        buttonSearch = findViewById(R.id.buttonSearchDonors);
-        recyclerView = findViewById(R.id.recyclerViewDonors);
-        emptyStateView = findViewById(R.id.textViewDonorEmptyState);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        }
+
+        recyclerViewDonors = findViewById(R.id.recyclerViewDonors);
+        recyclerViewDonors.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new DonorAdapter(filteredDonors, this);
+        recyclerViewDonors.setAdapter(adapter);
+
+        spinnerBloodGroup = findViewById(R.id.spinnerBloodGroup);
+        spinnerCity = findViewById(R.id.spinnerCity);
+        progressBar = findViewById(R.id.progressBar);
+        textViewNoDonors = findViewById(R.id.textViewNoDonors);
     }
 
     private void setupSpinners() {
-        ArrayAdapter<String> bloodAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"All", "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"}
-        );
-        bloodAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerBloodGroup.setAdapter(bloodAdapter);
+        String[] bloodGroups = {"All", "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"};
+        ArrayAdapter<String> bgAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, bloodGroups);
+        bgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerBloodGroup.setAdapter(bgAdapter);
 
-        ArrayAdapter<String> cityAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                new ArrayList<String>()
-        );
+        spinnerBloodGroup.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                applyFilters();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        spinnerCity.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                applyFilters();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void fetchDonors() {
+        progressBar.setVisibility(View.VISIBLE);
+        db.collection("donors")
+                .whereEqualTo("isAvailable", true)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    progressBar.setVisibility(View.GONE);
+                    allDonors.clear();
+                    Set<String> cities = new HashSet<>();
+                    cities.add("All");
+                    
+                    for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                        Donor donor = doc.toObject(Donor.class);
+                        if (donor != null) {
+                            allDonors.add(donor);
+                            if (donor.getCity() != null && !donor.getCity().isEmpty()) {
+                                cities.add(donor.getCity());
+                            }
+                        }
+                    }
+                    
+                    updateCitySpinner(cities);
+                    applyFilters();
+                })
+                .addOnFailureListener(e -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(this, "Error fetching donors: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void updateCitySpinner(Set<String> cities) {
+        List<String> cityList = new ArrayList<>(cities);
+        Collections.sort(cityList);
+        // Move "All" to front if it's there
+        if (cityList.contains("All")) {
+            cityList.remove("All");
+            cityList.add(0, "All");
+        }
+        
+        ArrayAdapter<String> cityAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, cityList);
         cityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCity.setAdapter(cityAdapter);
     }
 
-    private void setupRecyclerView() {
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        donorAdapter = new DonorAdapter(filteredDonorList, this);
-        recyclerView.setAdapter(donorAdapter);
-        emptyStateView.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.GONE);
-    }
-
-    private void bindActions() {
-        buttonSearch.setOnClickListener(v -> {
-            selectedBloodGroup = valueOrAll(spinnerBloodGroup.getSelectedItem());
-            selectedCity = valueOrAll(spinnerCity.getSelectedItem());
-            applyFilters();
-        });
-    }
-
-    private void listenForDonors() {
-        donorListener = db.collection("donors")
-                .whereEqualTo("isAvailable", true)
-                .addSnapshotListener((value, error) -> {
-                    if (error != null || value == null) return;
-                    donorList.clear();
-                    for (DocumentSnapshot doc : value.getDocuments()) {
-                        Donor donor = doc.toObject(Donor.class);
-                        if (donor != null) {
-                            if (TextUtils.isEmpty(donor.getUid())) {
-                                donor.setUid(doc.getId());
-                            }
-                            donorList.add(donor);
-                        }
-                    }
-                    updateCityList();
-                    applyFilters();
-                });
-    }
-
-    private void updateCityList() {
-        Set<String> cities = new LinkedHashSet<>();
-        for (Donor donor : donorList) {
-            if (!TextUtils.isEmpty(donor.getCity())) {
-                cities.add(donor.getCity().trim());
-            }
-        }
-        List<String> cityItems = new ArrayList<>();
-        cityItems.add("All");
-        cityItems.addAll(cities);
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                cityItems
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerCity.setAdapter(adapter);
-    }
-
     private void applyFilters() {
-        filteredDonorList.clear();
-        for (Donor donor : donorList) {
-            boolean bloodGroupMatch =
-                    selectedBloodGroup.equals("All") ||
-                            (donor.getBloodGroup() != null && donor.getBloodGroup().equals(selectedBloodGroup));
-            boolean cityMatch =
-                    selectedCity.equals("All") ||
-                            (donor.getCity() != null && donor.getCity().equalsIgnoreCase(selectedCity));
-            if (bloodGroupMatch && cityMatch) {
-                filteredDonorList.add(donor);
+        String selectedBG = spinnerBloodGroup.getSelectedItem() != null ? spinnerBloodGroup.getSelectedItem().toString() : "All";
+        String selectedCity = spinnerCity.getSelectedItem() != null ? spinnerCity.getSelectedItem().toString() : "All";
+
+        filteredDonors.clear();
+        for (Donor donor : allDonors) {
+            boolean bgMatch = selectedBG.equals("All") || selectedBG.equals(donor.getBloodGroup());
+            boolean cityMatch = selectedCity.equals("All") || selectedCity.equalsIgnoreCase(donor.getCity());
+            
+            if (bgMatch && cityMatch) {
+                filteredDonors.add(donor);
             }
         }
-        donorAdapter.notifyDataSetChanged();
-        if (filteredDonorList.isEmpty()) {
-            emptyStateView.setVisibility(View.VISIBLE);
-            recyclerView.setVisibility(View.GONE);
-        } else {
-            emptyStateView.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.VISIBLE);
-        }
-    }
 
-    private String valueOrAll(Object value) {
-        return value == null ? "All" : String.valueOf(value);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (donorListener != null) donorListener.remove();
+        adapter.updateList(filteredDonors);
+        textViewNoDonors.setVisibility(filteredDonors.isEmpty() ? View.VISIBLE : View.GONE);
     }
 }
-

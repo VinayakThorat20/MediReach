@@ -49,6 +49,7 @@ public class HospitalAdminDashboardActivity extends AppCompatActivity {
     private EditText editTextBloodABPositive;
     private EditText editTextBloodABNegative;
     private Button buttonSaveAndPublish;
+    private Button buttonBroadcastBlood;
     private Spinner spinnerQuickResource;
     private EditText editTextQuickValue;
     private Button buttonQuickUpdate;
@@ -99,6 +100,7 @@ public class HospitalAdminDashboardActivity extends AppCompatActivity {
         editTextBloodABPositive = findViewById(R.id.editTextBloodABPositive);
         editTextBloodABNegative = findViewById(R.id.editTextBloodABNegative);
         buttonSaveAndPublish = findViewById(R.id.buttonSaveAndPublish);
+        buttonBroadcastBlood = findViewById(R.id.buttonBroadcastBlood);
         spinnerQuickResource = findViewById(R.id.spinnerQuickResource);
         editTextQuickValue = findViewById(R.id.editTextQuickValue);
         buttonQuickUpdate = findViewById(R.id.buttonQuickUpdate);
@@ -109,6 +111,7 @@ public class HospitalAdminDashboardActivity extends AppCompatActivity {
         imageViewProfile = findViewById(R.id.imageViewProfile);
 
         buttonSaveAndPublish.setOnClickListener(v -> saveAndPublish());
+        buttonBroadcastBlood.setOnClickListener(v -> showBloodBroadcastDialog());
         buttonQuickUpdate.setOnClickListener(v -> runQuickUpdate());
     }
 
@@ -342,5 +345,105 @@ public class HospitalAdminDashboardActivity extends AppCompatActivity {
     private int parseInt(EditText field) {
         String value = field.getText().toString().trim();
         return TextUtils.isEmpty(value) ? 0 : Integer.parseInt(value);
+    }
+
+    private void showBloodBroadcastDialog() {
+        String[] bloodGroups = {"A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select Blood Group");
+        builder.setSingleChoiceItems(bloodGroups, 0, (dialog, which) -> {
+            EditText input = new EditText(this);
+            input.setHint("Units required");
+            input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+            AlertDialog.Builder unitsBuilder = new AlertDialog.Builder(this);
+            unitsBuilder.setTitle("Units Required");
+            unitsBuilder.setView(input);
+            unitsBuilder.setPositiveButton("Send", (unitDialog, unitWhich) -> {
+                String units = input.getText().toString().trim();
+                if (!TextUtils.isEmpty(units)) {
+                    broadcastBloodAlert(bloodGroups[which], units);
+                    dialog.dismiss();
+                } else {
+                    Toast.makeText(this, "Please enter units", Toast.LENGTH_SHORT).show();
+                }
+            });
+            unitsBuilder.setNegativeButton("Cancel", (unitDialog, unitWhich) -> unitDialog.dismiss());
+            unitsBuilder.show();
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
+    private void broadcastBloodAlert(String bloodGroup, String units) {
+        android.app.ProgressDialog pd = new android.app.ProgressDialog(this);
+        pd.setMessage("Finding matching donors...");
+        pd.show();
+
+        String hospitalName = getSharedPreferences("MediReachPrefs", MODE_PRIVATE)
+                .getString("hospital_name", currentUser.getEmail());
+
+        firestore.collection("donors")
+                .whereEqualTo("isAvailable", true)
+                .whereEqualTo("bloodGroup", bloodGroup)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    pd.dismiss();
+                    if (snapshot.isEmpty()) {
+                        Toast.makeText(this, "No available " + bloodGroup + " donors found", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    java.util.List<String> phoneNumbers = new java.util.ArrayList<>();
+                    for (com.google.firebase.firestore.DocumentSnapshot doc : snapshot.getDocuments()) {
+                        String phone = doc.getString("phone");
+                        if (phone != null && !phone.isEmpty()) {
+                            phoneNumbers.add(phone);
+                        }
+                    }
+
+                    String message = "URGENT - MediReach\nHospital: " + hospitalName
+                            + "\nBlood Group: " + bloodGroup + "\nUnits: " + units
+                            + "\nPlease contact us if you can donate. Thank you!";
+
+                    String recipients = android.text.TextUtils.join(";", phoneNumbers);
+
+                    Intent[] smsIntents = new Intent[] {
+                            new Intent(Intent.ACTION_VIEW)
+                                    .setData(android.net.Uri.parse("sms:" + recipients))
+                                    .putExtra("sms_body", message),
+                            new Intent(Intent.ACTION_SENDTO)
+                                    .setData(android.net.Uri.parse("smsto:" + recipients))
+                                    .putExtra("sms_body", message),
+                            new Intent(Intent.ACTION_SEND)
+                                    .setType("text/plain")
+                                    .putExtra(Intent.EXTRA_TEXT, message)
+                    };
+
+                    for (Intent smsIntent : smsIntents) {
+                        try {
+                            if (smsIntent.resolveActivity(getPackageManager()) != null) {
+                                if (Intent.ACTION_SEND.equals(smsIntent.getAction())) {
+                                    startActivity(Intent.createChooser(smsIntent, "Send Blood Requirement Alert"));
+                                } else {
+                                    startActivity(smsIntent);
+                                }
+                                Toast.makeText(this, "Broadcast sent to " + phoneNumbers.size() + " donors", Toast.LENGTH_LONG).show();
+                                return;
+                            }
+
+                            startActivity(smsIntent);
+                            Toast.makeText(this, "Broadcast sent to " + phoneNumbers.size() + " donors", Toast.LENGTH_LONG).show();
+                            return;
+                        } catch (Exception ignored) {
+                            // Try the next fallback intent.
+                        }
+                    }
+
+                    Toast.makeText(this, "No SMS app found", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    pd.dismiss();
+                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
     }
 }

@@ -69,45 +69,55 @@ public class SplashActivity extends AppCompatActivity {
      */
     private void navigateToNextScreen() {
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null) {
-            Log.d(TAG, "User is logged in: " + currentUser.getEmail());
-            String cachedRole = SessionManager.normalizeRole(SessionManager.getSavedRole(this));
-            if (!TextUtils.isEmpty(cachedRole)) {
-                navigateByRole(cachedRole);
-                return;
-            }
-            firebaseFirestore.collection("users").document(currentUser.getUid())
-                    .get()
-                    .addOnSuccessListener(snapshot -> {
-                        String role = SessionManager.normalizeRole(snapshot.getString("role"));
-                        SessionManager.saveRole(this, role);
-                        navigateByRole(role);
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Failed to fetch role, opening role selection", e);
-                        navigateByRole("");
-                    });
-        } else {
+        if (currentUser == null) {
             Log.d(TAG, "User is not logged in");
-            SharedPreferences preferences = getSharedPreferences(OnboardingActivity.PREFS, MODE_PRIVATE);
-            boolean onboardingDone = preferences.getBoolean(OnboardingActivity.KEY_ONBOARDING_DONE, false);
-            Intent intent = onboardingDone
-                    ? new Intent(SplashActivity.this, LoginActivity.class)
-                    : new Intent(SplashActivity.this, OnboardingActivity.class);
+            Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
+            return;
+        }
+
+        Log.d(TAG, "User is logged in: " + currentUser.getUid());
+        SharedPreferences prefs = getSharedPreferences("MediReachPrefs", MODE_PRIVATE);
+        String role = prefs.getString("user_role", "");
+
+        if (!TextUtils.isEmpty(role)) {
+            navigateByRole(role);
+        } else {
+            firebaseFirestore.collection("users").document(currentUser.getUid())
+                    .get()
+                    .addOnSuccessListener(snapshot -> {
+                        String fetchedRole = snapshot.getString("role");
+                        if (fetchedRole == null) fetchedRole = "";
+                        prefs.edit().putString("user_role", fetchedRole).apply();
+                        navigateByRole(fetchedRole);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to fetch role", e);
+                        navigateByRole("");
+                    });
         }
     }
 
     private void navigateByRole(String role) {
         Intent intent;
-        String normalizedRole = SessionManager.normalizeRole(role);
-        if (TextUtils.isEmpty(normalizedRole)) {
-            intent = new Intent(this, RoleSelectionActivity.class);
+        if ("hospital_admin".equals(role)) {
+            SharedPreferences prefs = getSharedPreferences("MediReachPrefs", MODE_PRIVATE);
+            boolean setupDone = prefs.getBoolean("hospital_setup_done", false);
+            if (setupDone) {
+                intent = new Intent(this, HospitalAdminDashboardActivity.class);
+            } else {
+                intent = new Intent(this, HospitalSetupActivity.class);
+            }
+        } else if ("patient".equals(role)) {
+            intent = new Intent(this, PatientDashboardActivity.class);
+        } else if ("donor".equals(role)) {
+            intent = new Intent(this, DonorDashboardActivity.class);
         } else {
-            intent = SessionManager.intentForRole(this, normalizedRole);
+            intent = new Intent(this, RoleSelectionActivity.class);
         }
+
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
